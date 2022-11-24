@@ -18,3 +18,7 @@ pubspec.lock
 
 # Mac
 .DS_Store
+
+# Exe
+*.exe
+*.mp3

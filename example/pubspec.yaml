@@ -14,3 +14,10 @@ dependencies:
 dev_dependencies:
   test: ^1.17.12
   flutter_lints: ^1.0.4
+
+flutter:
+  assets:
+    - assets/bee.mp4
+    - assets/Butterfly-209.mp4
+    - assets/ffmpeg/
+    - assets/ffprobe/

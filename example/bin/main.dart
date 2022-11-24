@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:ffmpeg_cli/ffmpeg_cli.dart';
 
 /// Uses an [FfmpegBuilder] to create an [FfmpegCommand], then
@@ -10,8 +9,10 @@ import 'package:ffmpeg_cli/ffmpeg_cli.dart';
 void main() async {
   final commandBuilder = FfmpegBuilder();
 
-  final butterflyStream = commandBuilder.addAsset("assets/Butterfly-209.mp4");
-  final beeStream = commandBuilder.addAsset("assets/bee.mp4");
+  final butterflyStream = commandBuilder.addAsset(
+      "C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\Butterfly-209.mp4");
+  final beeStream = commandBuilder.addAsset(
+      "C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\bee.mp4");
   final outputStream =
       commandBuilder.createStream(hasVideo: true, hasAudio: true);
 
@@ -54,7 +55,7 @@ void main() async {
       CliArg(name: 'map', value: outputStream.audioId!),
       const CliArg(name: 'vsync', value: '2'),
     ],
-    outputFilepath: "output/test_render.mp4",
+    outputFilepath: "C:\\Users\\remco\\Desktop\\test_render.mp4",
   );
 
   print('');
@@ -64,10 +65,27 @@ void main() async {
 
   // Run the FFMPEG command.
   final process = await Ffmpeg().run('assets/ffmpeg', cliCommand);
+  final probeProcess = await Ffprobe.run(
+      'C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\test.mp3',
+      ffprobeDir: 'assets/ffprobe');
+
+  var audioDurationInMilliSeconds =
+      probeProcess.format?.duration?.inMilliseconds;
+
+  int staticTimeInMilliSeconds = 11580;
+  double progress = 0;
 
   // Pipe the process output to the Dart console.
   process.stderr.transform(utf8.decoder).listen((data) {
-    print(data);
+    if (data.contains('time=')) {
+      List<String> items = data.split(' ');
+      String word = items.firstWhere((word) => word.contains('time='));
+      List<String> trimmedTime = word.split('=');
+      String time = trimmedTime[1];
+      int parsedTime = parseStandardDuration(time).inMilliseconds;
+      progress = (100 / staticTimeInMilliSeconds * parsedTime).roundToDouble();
+      print('${progress.toString()}%');
+    }
   });
 
   // Allow the user to respond to FFMPEG queries, such as file overwrite

@@ -66,6 +66,7 @@ class FfmpegCommand {
       ],
       '-filter_complex', filterGraph.toCli(), // filter graph
       outputFilepath,
+      '-y', // overwrite file by default if it exists
     ];
   }
 

@@ -12,24 +12,32 @@ class Ffprobe {
   /// Runs the FFMPEG `ffprobe` CLI command against the given [filepath].
   static Future<FfprobeResult> run(
     String filepath, {
-    String? workingDir,
+    String? ffprobeDir,
   }) async {
-    final result = await Process.run('ffprobe', [
-      '-v',
-      'quiet',
-      '-print_format',
-      'json',
-      '-show_format',
-      '-show_streams',
-      filepath,
-    ]);
+    final result = await Process.run(
+        'ffprobe.exe',
+        [
+          '-v',
+          'error', // or: error
+          '-hide_banner',
+          '-print_format',
+          'json',
+          '-show_format',
+          '-show_streams',
+          '-show_chapters',
+          filepath,
+        ],
+        workingDirectory: ffprobeDir);
 
     if (result.exitCode != 0) {
       print('Failed to run ffprobe for "$filepath"');
-      throw Exception('ffprobe returned error: ${result.exitCode}\n${result.stderr}');
+      throw Exception(
+          'ffprobe returned error: ${result.exitCode}\n${result.stderr}');
     }
 
-    if (result.stdout == null || result.stdout is! String || (result.stdout as String).isEmpty) {
+    if (result.stdout == null ||
+        result.stdout is! String ||
+        (result.stdout as String).isEmpty) {
       throw Exception('ffprobe did not output expected data: ${result.stdout}');
     }
 
