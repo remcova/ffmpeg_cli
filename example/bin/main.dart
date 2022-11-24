@@ -12,7 +12,8 @@ void main() async {
 
   final butterflyStream = commandBuilder.addAsset("assets/Butterfly-209.mp4");
   final beeStream = commandBuilder.addAsset("assets/bee.mp4");
-  final outputStream = commandBuilder.createStream(hasVideo: true, hasAudio: true);
+  final outputStream =
+      commandBuilder.createStream(hasVideo: true, hasAudio: true);
 
   commandBuilder.addFilterChain(
     // We combine the two example videos into one, by using a
@@ -62,7 +63,7 @@ void main() async {
   print('');
 
   // Run the FFMPEG command.
-  final process = await Ffmpeg().run(cliCommand);
+  final process = await Ffmpeg().run('assets/ffmpeg', cliCommand);
 
   // Pipe the process output to the Dart console.
   process.stderr.transform(utf8.decoder).listen((data) {

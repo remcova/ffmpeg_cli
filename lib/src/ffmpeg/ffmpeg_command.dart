@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:ffmpeg_cli/src/ffmpeg/log_level.dart';
 
 /// Dart wrappers for FFMPEG CLI commands, arguments, flags, and filters.
@@ -7,10 +6,11 @@ import 'package:ffmpeg_cli/src/ffmpeg/log_level.dart';
 /// Executes FFMPEG commands from Dart.
 class Ffmpeg {
   /// Executes the given [command].
-  Future<Process> run(FfmpegCommand command) {
+  Future<Process> run(String ffmpegDirectory, FfmpegCommand command) {
     return Process.start(
-      'ffmpeg',
+      'ffmpeg.exe', // EDITED. Was ffmpeg, not ffmpeg.exe
       command.toCli(),
+      workingDirectory: ffmpegDirectory,
     );
   }
 }
@@ -53,7 +53,8 @@ class FfmpegCommand {
   /// passed to a `Process` for execution.
   List<String> toCli() {
     if (filterGraph.chains.isEmpty) {
-      throw Exception('Filter graph doesn\'t have any filter chains. Can\'t create CLI command. If you want to make a'
+      throw Exception(
+          'Filter graph doesn\'t have any filter chains. Can\'t create CLI command. If you want to make a'
           ' direct copy of an asset, you\'ll need a different tool.');
     }
 
@@ -99,7 +100,8 @@ class FfmpegInput {
   /// Configures an FFMPEG input for a virtual device.
   ///
   /// See the FFMPEG docs for more information.
-  FfmpegInput.virtualDevice(String device) : args = ['-f', 'lavfi', '-i', device];
+  FfmpegInput.virtualDevice(String device)
+      : args = ['-f', 'lavfi', '-i', device];
 
   const FfmpegInput(this.args);
 
@@ -113,7 +115,10 @@ class FfmpegInput {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is FfmpegInput && runtimeType == other.runtimeType && toCli() == other.toCli();
+      identical(this, other) ||
+      other is FfmpegInput &&
+          runtimeType == other.runtimeType &&
+          toCli() == other.toCli();
 
   @override
   int get hashCode => toCli().hashCode;
@@ -121,7 +126,8 @@ class FfmpegInput {
 
 /// An argument that is passed to the FFMPEG CLI command.
 class CliArg {
-  CliArg.logLevel(LogLevel level) : this(name: 'loglevel', value: level.toFfmpegString());
+  CliArg.logLevel(LogLevel level)
+      : this(name: 'loglevel', value: level.toFfmpegString());
 
   const CliArg({
     required this.name,
@@ -199,7 +205,8 @@ class FfmpegStream {
   const FfmpegStream({
     this.videoId,
     this.audioId,
-  }) : assert(videoId != null || audioId != null, "FfmpegStream must include a videoId, or an audioId.");
+  }) : assert(videoId != null || audioId != null,
+            "FfmpegStream must include a videoId, or an audioId.");
 
   /// Handle to a video stream, e.g., "[0:v]".
   final String? videoId;

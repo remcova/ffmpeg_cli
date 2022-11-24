@@ -68,7 +68,7 @@ void main() async {
   print('');
 
   // Run the FFMPEG command.
-  final process = await Ffmpeg().run(cliCommand);
+  final process = await Ffmpeg().run('assets/ffmpeg', cliCommand);
 
   // Pipe the process output to the Dart console.
   process.stderr.transform(utf8.decoder).listen((data) {
