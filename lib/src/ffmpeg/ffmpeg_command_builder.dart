@@ -35,12 +35,9 @@ class FfmpegBuilder {
   ///
   /// If [hasVideo] is `true`, the asset is processed for video frames.
   /// If [hasAudio] is `true`, the asset is processed for audio streams.
-  FfmpegStream addAsset(
-    String assetPath, {
-    bool hasVideo = true,
-    bool hasAudio = true,
-  }) {
-    final input = FfmpegInput.asset(assetPath);
+  FfmpegStream addAsset(FfmpegInput input,
+      {bool hasVideo = true, bool hasImage = true, bool hasAudio = true}) {
+    final _input = input;
 
     // Generate video and audio stream IDs using the format that
     // FFMPEG expects.
@@ -49,6 +46,13 @@ class FfmpegBuilder {
             ? '[${_inputs.length}:v]'
             : '[${_inputs.length}]'
         : null;
+
+    final imageId = hasImage
+        ? hasImage && hasImage
+            ? '[${_inputs.length}:i]'
+            : '[${_inputs.length}]'
+        : null;
+
     final audioId = hasAudio
         ? hasVideo && hasAudio
             ? '[${_inputs.length}:a]'
@@ -59,6 +63,7 @@ class FfmpegBuilder {
         input,
         () => FfmpegStream(
               videoId: videoId,
+              imageId: imageId,
               audioId: audioId,
             ));
 
@@ -116,9 +121,11 @@ class FfmpegBuilder {
     return stream;
   }
 
-  FfmpegStream createStream({bool hasVideo = true, bool hasAudio = true}) {
+  FfmpegStream createStream(
+      {bool hasImage = true, bool hasVideo = true, bool hasAudio = true}) {
     final stream = FfmpegStream(
       videoId: hasVideo ? '[comp_${_compositionStreamCount}_v]' : null,
+      imageId: hasImage ? '[comp_${_compositionStreamCount}_i]' : null,
       audioId: hasAudio ? '[comp_${_compositionStreamCount}_a]' : null,
     );
 

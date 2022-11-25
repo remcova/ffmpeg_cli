@@ -9,51 +9,43 @@ import 'package:ffmpeg_cli/ffmpeg_cli.dart';
 void main() async {
   final commandBuilder = FfmpegBuilder();
 
-  final butterflyStream = commandBuilder.addAsset(
-      "C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\Butterfly-209.mp4");
-  final beeStream = commandBuilder.addAsset(
-      "C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\bee.mp4");
-  final outputStream =
-      commandBuilder.createStream(hasVideo: true, hasAudio: true);
+  // final outputStream =
+  //     commandBuilder.createStream(hasImage: true, hasAudio: true);
 
-  commandBuilder.addFilterChain(
-    // We combine the two example videos into one, by using a
-    // "concat" filter.
-    FilterChain(
-      inputs: [
-        // The inputs into the "concat" filter are the input IDs
-        // for the source videos that FFMPEG generated.
-        butterflyStream,
-        beeStream,
-      ],
-      filters: [
-        // Combine the two source videos, one after the other, by
-        // using the "concat" filter.
-        ConcatFilter(
-          segmentCount: 2,
-          outputVideoStreamCount: 1,
-          outputAudioStreamCount: 1,
-        ),
-      ],
-      outputs: [
-        // This "concat" filter will produce a video stream and an
-        // audio stream. Here, we give those streams IDs so that we
-        // can pass them into other FilterChains, or map them to the
-        // output file.
-        outputStream,
-      ],
-    ),
-  );
+  // Run Ffprobe to get audio duration
+  final probeProcess = await Ffprobe.run(
+      'C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\appelsientje.mp3',
+      ffprobeDir: 'assets/ffprobe');
+  int? audioDurationInSeconds = probeProcess.format?.duration?.inSeconds;
+  int? audioDurationInMilliSeconds =
+      probeProcess.format?.duration?.inMilliseconds;
 
   final cliCommand = commandBuilder.build(
     args: [
       // Set the FFMPEG log level.
-      CliArg.logLevel(LogLevel.info),
+      // CliArg.logLevel(LogLevel.info),
       // Map the final stream IDs from the filter graph to
       // the output file.
-      CliArg(name: 'map', value: outputStream.videoId!),
-      CliArg(name: 'map', value: outputStream.audioId!),
-      const CliArg(name: 'vsync', value: '2'),
+      const CliArg(name: 'loop', value: '1'),
+      const CliArg(name: 'framerate', value: '1'),
+      const CliArg(
+          name: 'i',
+          value:
+              'C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\lambo.jpg'), // image input
+      const CliArg(
+          name: 'i',
+          value:
+              'C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\appelsientje.mp3'), // audio input
+      CliArg(name: 't', value: audioDurationInSeconds.toString()),
+      const CliArg(name: 'c:v', value: 'libx264'),
+      const CliArg(name: 'preset', value: 'ultrafast'),
+      const CliArg(name: 'crf', value: '20'),
+      const CliArg(name: 'tune', value: 'stillimage'),
+      const CliArg(name: 'pix_fmt', value: 'yuv420p'),
+      const CliArg(
+          name: 'vf',
+          value:
+              'scale=w=1920:h=1080:force_original_aspect_ratio=1,pad=1920:1080:-1:(1080-1080)/2,setsar=1'),
     ],
     outputFilepath: "C:\\Users\\remco\\Desktop\\test_render.mp4",
   );
@@ -65,12 +57,6 @@ void main() async {
 
   // Run the FFMPEG command.
   final process = await Ffmpeg().run('assets/ffmpeg', cliCommand);
-  final probeProcess = await Ffprobe.run(
-      'C:\\Users\\remco\\Documents\\GitHub\\ffmpeg_cli\\example\\assets\\test.mp3',
-      ffprobeDir: 'assets/ffprobe');
-
-  var audioDurationInMilliSeconds =
-      probeProcess.format?.duration?.inMilliseconds;
 
   int staticTimeInMilliSeconds = 11580;
   double progress = 0;
@@ -83,7 +69,8 @@ void main() async {
       List<String> trimmedTime = word.split('=');
       String time = trimmedTime[1];
       int parsedTime = parseStandardDuration(time).inMilliseconds;
-      progress = (100 / staticTimeInMilliSeconds * parsedTime).roundToDouble();
+      progress =
+          (100 / audioDurationInMilliSeconds! * parsedTime).roundToDouble();
       print('${progress.toString()}%');
     }
   });

@@ -52,19 +52,23 @@ class FfmpegCommand {
   /// Converts this command to a series of CLI arguments, which can be
   /// passed to a `Process` for execution.
   List<String> toCli() {
-    if (filterGraph.chains.isEmpty) {
-      throw Exception(
-          'Filter graph doesn\'t have any filter chains. Can\'t create CLI command. If you want to make a'
-          ' direct copy of an asset, you\'ll need a different tool.');
-    }
+    // if (filterGraph.chains.isEmpty) {
+    //   throw Exception(
+    //       'Filter graph doesn\'t have any filter chains. Can\'t create CLI command. If you want to make a'
+    //       ' direct copy of an asset, you\'ll need a different tool.');
+    // }
+
+    // if (inputs.isEmpty) {
+    //   throw Exception('No inputs given. Use -i argument to parse inputs.');
+    // }
 
     return [
-      for (final input in inputs) ...input.args,
+      // for (final input in inputs) ...input.args,
       for (final arg in args) ...[
         '-${arg.name}',
         arg.value,
       ],
-      '-filter_complex', filterGraph.toCli(), // filter graph
+      // '-filter_complex', filterGraph.toCli(), // filter graph
       outputFilepath,
       '-y', // overwrite file by default if it exists
     ];
@@ -77,13 +81,13 @@ class FfmpegCommand {
   /// what command is actually running in the `Process`.
   String expectedCliInput() {
     final buffer = StringBuffer('ffmpeg\n');
-    for (final input in inputs) {
-      buffer.writeln('  ${input.toCli()}');
-    }
+    // for (final input in inputs) {
+    //   buffer.writeln('  ${input.toCli()}');
+    // }
     for (final arg in args) {
       buffer.writeln('  ${arg.toCli()}');
     }
-    buffer.writeln('  -filter_complex ');
+    // buffer.writeln('  -filter_complex ');
     buffer.writeln(filterGraph.toCli(indent: '    '));
     buffer.writeln('  $outputFilepath');
 
@@ -205,8 +209,9 @@ class FilterChain {
 class FfmpegStream {
   const FfmpegStream({
     this.videoId,
+    this.imageId,
     this.audioId,
-  }) : assert(videoId != null || audioId != null,
+  }) : assert(videoId != null || audioId != null || imageId != null,
             "FfmpegStream must include a videoId, or an audioId.");
 
   /// Handle to a video stream, e.g., "[0:v]".
@@ -215,11 +220,21 @@ class FfmpegStream {
   /// Handle to an audio stream, e.g., "[0:a]".
   final String? audioId;
 
+  /// Handle to an audio stream, e.g., "[0:i]".
+  final String? imageId;
+
   /// Returns a copy of this stream with just the video stream handle.
   ///
   /// If this stream only includes video, then this stream is returned.
   FfmpegStream get videoOnly {
     return audioId == null ? this : FfmpegStream(videoId: videoId);
+  }
+
+  /// Returns a copy of this stream with just the audio stream handle.
+  ///
+  /// If this stream only includes audio, then this stream is returned.
+  FfmpegStream get imageOnly {
+    return imageId == null ? this : FfmpegStream(imageId: imageId);
   }
 
   /// Returns a copy of this stream with just the audio stream handle.
@@ -236,6 +251,9 @@ class FfmpegStream {
     final streams = <String>[];
     if (videoId != null) {
       streams.add(videoId!);
+    }
+    if (imageId != null) {
+      streams.add(imageId!);
     }
     if (audioId != null) {
       streams.add(audioId!);
